@@ -1,115 +1,229 @@
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.tailwindcss.com"></script>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>SERİMİZ</title>
 
-<style>
-  body { 
-    background-color: #000; 
-    color: #fff; 
-    font-family: 'Inter', ui-sans-serif, system-ui; 
-    -webkit-tap-highlight-color: transparent;
-  }
-  .vercel-card { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 16px; }
-  .btn-primary { background: #fff; color: #000; transition: all 0.2s; cursor: pointer; }
-  .btn-primary:hover { background: #e5e5e5; }
-  .blue-glow { text-shadow: 0 0 30px rgba(0, 112, 243, 0.4); }
-  input { background: #000 !important; border: 1px solid #333 !important; color: white !important; }
-  input:focus { border-color: #0070f3 !important; }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-</style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-<div class="min-h-screen flex flex-col items-center p-6 pb-20 no-scrollbar">
-  
-  <div class="text-center mt-12 mb-12">
-    <h1 class="text-4xl font-extrabold tracking-tighter blue-glow text-blue-500 italic">SERİMİZ</h1>
-    <p class="text-[10px] text-zinc-600 tracking-[0.3em] font-medium mt-1">serimiz.vercel.app</p>
-  </div>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .vercel-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 28px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; align-items: flex-start; justify-content: center; padding-top: 40px; backdrop-filter: blur(20px); }
+        .modal.active { display: flex; }
+        input { background: #111 !important; border: 1px solid #222 !important; color: white !important; font-size: 16px !important; }
+        .tab-btn { flex: 1; padding: 12px 5px; font-size: 10px; font-weight: 900; border-radius: 14px; text-align: center; color: #444; }
+        .tab-btn.active { background: #111; color: #3b82f6; border: 1px solid #1e3a8a; }
+        .admin-section { display: none; width: 100%; }
+        .admin-section.active { display: block; }
+        .badge-kurucu { background: linear-gradient(to right, #ef4444, #991b1b); color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .avatar-choice { cursor: pointer; transition: all 0.2s; border: 2px solid transparent; border-radius: 12px; padding: 8px; font-size: 24px; line-height: 1; }
+        .avatar-choice:active { transform: scale(0.9); background: #222; }
+    </style>
+</head>
+<body class="p-4 pb-20">
 
-  <div id="auth-panel" class="w-full max-w-sm">
-    <div class="vercel-card p-2 shadow-2xl">
-      <div class="flex mb-2">
-        <button onclick="setTab('L')" id="tL" class="flex-1 py-4 font-bold border-b-2 border-blue-500 transition-all">GİRİŞ</button>
-        <button onclick="setTab('R')" id="tR" class="flex-1 py-4 font-bold opacity-30 border-b-2 border-transparent transition-all">KAYIT</button>
-      </div>
-      <div class="p-6 space-y-4">
-        <input type="email" id="email" placeholder="E-posta" class="w-full p-4 rounded-xl outline-none">
-        <input type="password" id="pass" placeholder="Şifre" class="w-full p-4 rounded-xl outline-none">
-        <button id="auth-btn" onclick="handleAuth()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-sm tracking-widest active:scale-95 transition-all">DEVAM ET</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="game-panel" class="hidden w-full max-w-sm space-y-6">
-    <div class="vercel-card p-12 text-center relative shadow-2xl">
-      <div id="streak-val" class="text-9xl font-black italic tracking-tighter">0</div>
-      <p class="text-zinc-500 text-[10px] mt-4 uppercase tracking-[0.5em] font-bold">GÜNLÜK SERİ</p>
-      
-      <button id="hit-btn" onclick="doHit()" class="btn-primary w-full mt-10 py-5 rounded-2xl font-black text-xl active:scale-90 transition-all">SERİYİ ARTIR 🔥</button>
-      <p id="timer" class="mt-6 text-[11px] font-bold text-blue-500 italic h-4 uppercase tracking-widest"></p>
+    <div class="flex justify-between items-center mt-4 mb-8 px-2">
+        <div>
+            <h1 class="text-2xl font-black italic text-blue-500 uppercase tracking-tighter" style="text-shadow: 0 0 15px rgba(59, 130, 246, 0.4);">SERİMİZ</h1>
+            <p id="user-status" class="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Yükleniyor...</p>
+        </div>
+        <div class="flex gap-2">
+            <button id="admin-trigger" onclick="toggleAdmin()" class="hidden w-11 h-11 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-xl active:scale-90 transition">⚙️</button>
+            <button id="profile-trigger" onclick="openOwnProfile()" class="hidden w-11 h-11 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl active:scale-90 transition font-bold text-blue-500">👤</button>
+        </div>
     </div>
 
-    <div class="vercel-card p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-[10px] font-black text-zinc-500 tracking-[0.2em] uppercase">🏆 SIRALAMA</h3>
-        <span class="text-[9px] text-blue-500 font-bold bg-blue-500/10 px-2 py-1 rounded">CANLI</span>
-      </div>
-      <div id="lb" class="space-y-3"></div>
+    <div id="auth-panel" class="w-full max-w-sm mx-auto mt-10">
+        <div class="vercel-card p-2 shadow-2xl">
+            <div class="flex p-1">
+                <button onclick="setTab('L')" id="tL" class="flex-1 py-4 font-black text-[11px] border-b-2 border-blue-600 transition-all">GİRİŞ</button>
+                <button onclick="setTab('R')" id="tR" class="flex-1 py-4 font-black text-[11px] opacity-30 border-b-2 border-transparent transition-all">KAYIT</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <input type="email" id="email" placeholder="E-posta" class="w-full p-4 rounded-2xl outline-none">
+                <input type="password" id="pass" placeholder="Şifre" class="w-full p-4 rounded-2xl outline-none">
+                <button onclick="handleAuth()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xs tracking-widest active:scale-95 transition-all">SİSTEME GİR</button>
+            </div>
+        </div>
     </div>
-    
-    <button onclick="auth.signOut()" class="w-full text-zinc-800 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors py-4">Çıkış Yap</button>
-  </div>
-</div>
+
+    <div id="game-panel" class="hidden w-full max-w-sm mx-auto space-y-5">
+        <div id="announcement-bar" class="hidden bg-blue-600/10 border border-blue-500/20 p-4 rounded-2xl text-[10px] font-bold text-blue-400 text-center italic"></div>
+        <div class="vercel-card p-10 text-center relative">
+            <div id="streak-val" class="text-[100px] leading-none font-black italic tracking-tighter text-white">0</div>
+            <p class="text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em]">GÜNLÜK SERİ</p>
+            <button id="hit-btn" onclick="doHit()" class="w-full mt-10 bg-white text-black py-5 rounded-3xl font-black text-xl active:scale-90 transition-all uppercase shadow-lg shadow-white/5">ARTIR 🔥</button>
+            <p id="timer" class="mt-6 text-[10px] font-bold text-blue-500 h-4 uppercase tracking-widest"></p>
+        </div>
+        <div class="vercel-card p-5">
+            <h3 class="text-[10px] font-black text-zinc-500 tracking-widest uppercase italic mb-5 px-1">🏆 GLOBAL SIRALAMA</h3>
+            <div id="lb" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <div id="user-modal" class="modal px-6">
+        <div class="vercel-card w-full max-w-xs p-8 text-center relative">
+            <button onclick="closeModal('user-modal')" class="absolute top-4 right-4 text-zinc-600 text-2xl p-2">✕</button>
+            <div id="m-avatar" class="w-24 h-24 rounded-[32px] mx-auto mb-4 flex items-center justify-center text-5xl bg-zinc-900 border-2 border-zinc-800">👤</div>
+            <div id="m-badge" class="badge inline-block font-black px-4 py-1.5 rounded-full text-[8px] mb-2 uppercase italic">OYUNCU</div>
+            <h2 id="m-name" class="text-3xl font-black italic mb-1 uppercase tracking-tighter">...</h2>
+            <div id="m-rank" class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-6 italic">...</div>
+
+            <div id="avatar-selection-zone" class="hidden mb-6">
+                <p class="text-[8px] text-zinc-500 font-black mb-2 uppercase tracking-widest">Avatar Değiştir</p>
+                <div class="flex flex-wrap justify-center gap-2 bg-black/40 p-3 rounded-2xl border border-zinc-900">
+                    <span onclick="updateAvatar('🔥')" class="avatar-choice">🔥</span>
+                    <span onclick="updateAvatar('👑')" class="avatar-choice">👑</span>
+                    <span onclick="updateAvatar('⚡')" class="avatar-choice">⚡</span>
+                    <span onclick="updateAvatar('💎')" class="avatar-choice">💎</span>
+                    <span onclick="updateAvatar('🦁')" class="avatar-choice">🦁</span>
+                    <span onclick="updateAvatar('💀')" class="avatar-choice">💀</span>
+                    <span onclick="updateAvatar('🌀')" class="avatar-choice">🌀</span>
+                    <span onclick="updateAvatar('🦊')" class="avatar-choice">🦊</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-black p-4 rounded-2xl border border-zinc-900 text-left">
+                    <p class="text-[8px] text-zinc-600 font-black mb-1">SKOR</p>
+                    <p id="m-streak" class="text-2xl font-black text-white">0</p>
+                </div>
+                <div id="own-edit-zone" class="hidden bg-black p-2 rounded-2xl border border-zinc-900 flex flex-col justify-center gap-1">
+                    <input type="text" id="edit-name-val" class="text-[9px] p-2 rounded-xl text-center" placeholder="Yeni Ad">
+                    <button onclick="updateName()" class="bg-blue-600 text-white text-[8px] font-black py-2 rounded-xl uppercase">GÜNCELLE</button>
+                </div>
+            </div>
+            <button id="logout-btn" onclick="handleLogout()" class="hidden w-full text-red-500 py-3 text-[10px] font-black uppercase border border-red-900/30 bg-red-500/5 rounded-xl">OTURUMU KAPAT</button>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="modal px-4">
+        <div class="vercel-card w-full max-w-sm p-5 relative border-red-500/20">
+            <button onclick="closeModal('admin-modal')" class="absolute top-4 right-4 text-zinc-600 text-2xl p-2">✕</button>
+            <h2 class="text-lg font-black text-red-500 mb-6 italic uppercase tracking-tighter">KRALİYET PANELİ</h2>
+            <div class="flex gap-1 mb-6 bg-zinc-950 p-1 rounded-2xl border border-zinc-900">
+                <button onclick="switchAdminTab('users')" id="btn-users" class="tab-btn active">ÜYELER</button>
+                <button onclick="switchAdminTab('news')" id="btn-news" class="tab-btn">DUYURU</button>
+                <button onclick="switchAdminTab('sys')" id="btn-sys" class="tab-btn">SİSTEM</button>
+            </div>
+            <div id="sec-users" class="admin-section active">
+                <div id="admin-list" class="space-y-3 max-h-[50vh] overflow-y-auto no-scrollbar"></div>
+            </div>
+            <div id="sec-news" class="admin-section space-y-4">
+                <textarea id="news-input" class="w-full h-32 p-4 rounded-3xl text-sm outline-none resize-none" placeholder="Duyuru metni..."></textarea>
+                <button onclick="sendAnnouncement()" class="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase italic">YAYINLA</button>
+            </div>
+            <div id="sec-sys" class="admin-section space-y-4 text-center">
+                <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+                    <p class="text-[10px] font-black text-zinc-500 mb-4 uppercase">Bakım Modu</p>
+                    <button class="w-full bg-red-600 py-5 rounded-3xl text-xs font-black uppercase italic">KİLİTLE</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script>
-  // Firebase & Supabase Init
-  const fbConfig = {
-    apiKey: "AIzaSyAQqqUe1Llp9HsObXxPj8aXpV6KP0lN0zM",
-    authDomain: "serimiz.firebaseapp.com",
-    projectId: "serimiz",
-    storageBucket: "serimiz.firebasestorage.app",
-    messagingSenderId: "871994610542",
-    appId: "1:871994610542:web:2576a4dbe9082c23ad677f"
-  };
-  
-  if (!firebase.apps.length) firebase.initializeApp(fbConfig);
+  const KURUCU_EMAIL = "berksgamesyt@gmail.com";
+  const fbConfig = { apiKey: "AIzaSyAQqqUe1Llp9HsObXxPj8aXpV6KP0lN0zM", authDomain: "serimiz.firebaseapp.com", projectId: "serimiz", storageBucket: "serimiz.firebasestorage.app", messagingSenderId: "871994610542", appId: "1:871994610542:web:2576a4dbe9082c23ad677f" };
+  firebase.initializeApp(fbConfig);
   const auth = firebase.auth();
+  const sb = supabase.createClient('https://ntrkzdkkfqbbzbmedrwk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50cmt6ZGtrZnFiYnpibWVkcndrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwOTQyMDMsImV4cCI6MjA4NjY3MDIwM30.Xh1z3TKEj7u3JP_CA_s7dgX6h6e5RTcA_3hUPR4s0mY');
 
-  const sbUrl = 'https://ntrkzdkkfqbbzbmedrwk.supabase.co';
-  const sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50cmt6ZGtrZnFiYnpibWVkcndrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwOTQyMDMsImV4cCI6MjA4NjY3MDIwM30.Xh1z3TKEj7u3JP_CA_s7dgX6h6e5RTcA_3hUPR4s0mY';
-  const sb = supabase.createClient(sbUrl, sbKey);
+  let mode = 'L', myData = null;
 
-  let mode = 'L';
+  function setTab(m) { mode = m; document.getElementById('tL').className = m==='L'?'flex-1 py-4 font-black text-[11px] border-b-2 border-blue-600':'flex-1 py-4 font-black text-[11px] opacity-30 border-b-2 border-transparent'; document.getElementById('tR').className = m==='R'?'flex-1 py-4 font-black text-[11px] border-b-2 border-blue-600':'flex-1 py-4 font-black text-[11px] opacity-30 border-b-2 border-transparent'; }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+  function getRank(s) { if(s >= 50) return "EFSANE"; if(s >= 20) return "USTA"; if(s >= 7) return "SADIK"; return "ÇAYLAK"; }
 
-  function setTab(m) {
-    mode = m;
-    document.getElementById('tL').style.opacity = m === 'L' ? '1' : '0.3';
-    document.getElementById('tL').style.borderColor = m === 'L' ? '#0070f3' : 'transparent';
-    document.getElementById('tR').style.opacity = m === 'R' ? '1' : '0.3';
-    document.getElementById('tR').style.borderColor = m === 'R' ? '#0070f3' : 'transparent';
+  // LOGOUT DÜZELTMESİ
+  function handleLogout() {
+      auth.signOut().then(() => {
+          location.reload();
+      });
   }
 
-  async function handleAuth() {
-    const e = document.getElementById('email').value.trim();
-    const p = document.getElementById('pass').value;
-    if (!e || !p) return;
-    try {
-      if (mode === 'L') {
-        await auth.signInWithEmailAndPassword(e, p);
-      } else {
-        await auth.createUserWithEmailAndPassword(e, p);
-        alert("Kayıt başarılı! Giriş yapabilirsin.");
-        setTab('L');
+  async function showUserProfile(uid) {
+    const { data: user } = await sb.from('profiles').select('*').eq('id', uid).single();
+    if(!user) return;
+    const isMe = auth.currentUser && auth.currentUser.uid === uid;
+    const isFounder = (user.full_name === "berksgamesyt" || (isMe && auth.currentUser.email === KURUCU_EMAIL));
+
+    document.getElementById('m-name').innerText = user.full_name;
+    document.getElementById('m-streak').innerText = user.streak_count;
+    document.getElementById('m-rank').innerText = getRank(user.streak_count);
+    document.getElementById('m-avatar').innerText = user.avatar_url || "👤";
+    
+    const badge = document.getElementById('m-badge');
+    if(isFounder) {
+        badge.innerText = "KURUCU";
+        badge.className = "badge inline-block font-black px-4 py-1.5 rounded-full text-[8px] mb-2 badge-kurucu";
+    } else {
+        badge.innerText = "OYUNCU";
+        badge.className = "badge inline-block font-black px-4 py-1.5 rounded-full text-[8px] mb-2 bg-zinc-800 text-zinc-400";
+    }
+
+    document.getElementById('avatar-selection-zone').classList.toggle('hidden', !isMe);
+    document.getElementById('own-edit-zone').classList.toggle('hidden', !isMe);
+    document.getElementById('logout-btn').classList.toggle('hidden', !isMe);
+    document.getElementById('user-modal').classList.add('active');
+  }
+
+  async function updateAvatar(emoji) {
+      const { error } = await sb.from('profiles').update({ avatar_url: emoji }).eq('id', auth.currentUser.uid);
+      if(!error) {
+          document.getElementById('m-avatar').innerText = emoji;
+          confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+          loadLB();
       }
-    } catch (err) { alert(err.message); }
   }
 
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
+  async function updateName() {
+      const newName = document.getElementById('edit-name-val').value.trim();
+      if(!newName) return;
+      const { error } = await sb.from('profiles').update({ full_name: newName }).eq('id', auth.currentUser.uid);
+      if(!error) location.reload();
+  }
+
+  function openOwnProfile() { showUserProfile(auth.currentUser.uid); }
+  function toggleAdmin() { document.getElementById('admin-modal').classList.toggle('active'); if(document.getElementById('admin-modal').classList.contains('active')) loadAdminList(); }
+
+  async function loadLB() {
+    const { data } = await sb.from('profiles').select('*').order('streak_count', {ascending:false}).limit(50);
+    document.getElementById('lb').innerHTML = data.map((x, i) => `
+        <div onclick="showUserProfile('${x.id}')" class="flex justify-between items-center p-4 bg-zinc-900/40 rounded-2xl border border-zinc-800/50 text-[11px] active:scale-95 transition">
+          <span class="font-bold text-zinc-500 flex items-center gap-2">
+            #${i+1} <span class="text-lg">${x.avatar_url || '👤'}</span>
+            <span class="${x.full_name === 'berksgamesyt' ? 'text-red-500 font-black' : 'text-white font-bold'}">${x.full_name}</span>
+          </span>
+          <span class="font-black text-blue-500">${x.streak_count} 🔥</span>
+        </div>
+    `).join('');
+  }
+
+  auth.onAuthStateChanged(async (u) => {
+    if(u) {
       document.getElementById('auth-panel').classList.add('hidden');
       document.getElementById('game-panel').classList.remove('hidden');
-      await sync(user);
+      document.getElementById('profile-trigger').classList.remove('hidden');
+      
+      if(u.email === KURUCU_EMAIL) {
+          document.getElementById('admin-trigger').classList.remove('hidden');
+          document.getElementById('user-status').className = "text-[8px] text-red-500 font-black uppercase tracking-widest";
+          document.getElementById('user-status').innerText = "KURUCU OTURUMU";
+      } else {
+          document.getElementById('user-status').innerText = u.email;
+      }
+      await sync(u);
       loadLB();
+      loadAnnouncement();
     } else {
       document.getElementById('auth-panel').classList.remove('hidden');
       document.getElementById('game-panel').classList.add('hidden');
@@ -118,56 +232,76 @@
 
   async function sync(u) {
     let { data: p } = await sb.from('profiles').select('*').eq('id', u.uid).single();
-    if (!p) {
-      const { data: n } = await sb.from('profiles').upsert({
-        id: u.uid,
-        full_name: u.email.split('@')[0],
-        streak_count: 0,
-        last_pressed: new Date(0).toISOString()
-      }).select().single();
-      p = n;
+    if(!p) {
+        const { data: n } = await sb.from('profiles').upsert({ id: u.uid, full_name: u.email.split('@')[0], streak_count: 0, last_pressed: new Date(0).toISOString(), avatar_url: '👤' }).select().single();
+        p = n;
     }
-    if (p) {
-      document.getElementById('streak-val').innerText = p.streak_count;
-      const diff = (new Date() - new Date(p.last_pressed)) / (1000 * 60 * 60);
-      if (diff < 24) {
+    myData = p;
+    document.getElementById('streak-val').innerText = p.streak_count;
+    const diff = (new Date() - new Date(p.last_pressed)) / (1000 * 60 * 60);
+    if(diff < 24) {
         const b = document.getElementById('hit-btn');
-        b.disabled = true;
-        b.style.opacity = "0.1";
-        b.innerText = "YARIN GEL";
-        document.getElementById('timer').innerText = `BEKLEME: ${Math.floor(24 - diff)} SAAT`;
-      }
+        b.disabled = true; b.style.opacity = "0.2"; b.innerText = "BEKLEMEDE";
+        document.getElementById('timer').innerText = `HAK: ${Math.floor(24-diff)} SAAT`;
     }
   }
 
   async function doHit() {
-    const u = auth.currentUser;
-    const b = document.getElementById('hit-btn');
-    b.disabled = true;
-    b.innerText = "...";
-    try {
-      let { data: p } = await sb.from('profiles').select('streak_count').eq('id', u.uid).single();
-      const val = (p ? p.streak_count : 0) + 1;
-      const { error } = await sb.from('profiles').upsert({
-        id: u.uid,
-        full_name: u.email.split('@')[0],
-        streak_count: val,
-        last_pressed: new Date().toISOString()
-      });
-      if (!error) location.reload();
-      else b.disabled = false;
-    } catch (e) { b.disabled = false; }
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    const { error } = await sb.from('profiles').update({ streak_count: myData.streak_count+1, last_pressed: new Date().toISOString() }).eq('id', auth.currentUser.uid);
+    if(!error) location.reload();
   }
 
-  async function loadLB() {
-    const { data } = await sb.from('profiles').select('full_name, streak_count').order('streak_count', { ascending: false }).limit(20);
-    if (data) {
-      document.getElementById('lb').innerHTML = data.map((x, i) => `
-        <div class="flex justify-between items-center p-4 bg-zinc-900/40 rounded-xl border border-zinc-800/50 text-[11px]">
-          <span class="font-medium text-zinc-500">#${i + 1} <span class="text-white ml-2 font-semibold lowercase">${x.full_name}</span></span>
-          <span class="font-black text-blue-500">${x.streak_count} 🔥</span>
+  async function handleAuth() {
+    const e = document.getElementById('email').value.trim();
+    const p = document.getElementById('pass').value;
+    try {
+      if(mode==='L') await auth.signInWithEmailAndPassword(e,p);
+      else await auth.createUserWithEmailAndPassword(e,p);
+    } catch(err) { alert(err.message); }
+  }
+
+  function switchAdminTab(target) {
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('sec-' + target).classList.add('active');
+      document.getElementById('btn-' + target).classList.add('active');
+  }
+
+  async function loadAdminList() {
+    const { data } = await sb.from('profiles').select('*').order('streak_count', {ascending:false});
+    document.getElementById('admin-list').innerHTML = data.map(u => `
+        <div class="p-4 bg-zinc-950 rounded-[20px] border border-zinc-900 flex justify-between items-center">
+            <div class="text-[10px] font-black uppercase">${u.full_name} <span class="text-blue-500">${u.streak_count}</span></div>
+            <div class="flex gap-1">
+                <input type="number" id="inp-${u.id}" class="w-12 h-8 text-center text-[10px] bg-black border border-zinc-800 rounded-lg" placeholder="+">
+                <button onclick="adminAction('${u.id}')" class="bg-blue-600 px-2 rounded-lg text-[8px] font-black">EKLE</button>
+            </div>
         </div>
-      `).join('');
-    }
+    `).join('');
+  }
+
+  async function adminAction(uid) {
+    const val = parseInt(document.getElementById('inp-'+uid).value) || 0;
+    const { data } = await sb.from('profiles').select('streak_count').eq('id', uid).single();
+    await sb.from('profiles').update({ streak_count: data.streak_count + val }).eq('id', uid);
+    loadAdminList(); loadLB();
+  }
+
+  async function loadAnnouncement() {
+      const { data } = await sb.from('settings').select('value').eq('key', 'announcement').single();
+      if(data) {
+          document.getElementById('announcement-bar').innerText = "📢 " + data.value;
+          document.getElementById('announcement-bar').classList.remove('hidden');
+      }
+  }
+
+  async function sendAnnouncement() {
+      const msg = document.getElementById('news-input').value;
+      await sb.from('settings').upsert({ key: 'announcement', value: msg });
+      alert("Yayınlandı!");
   }
 </script>
+
+</body>
+</html>
